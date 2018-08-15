@@ -1,31 +1,21 @@
 import React, { Component } from 'react'
+import { bindActionCreators } from 'redux'
+import { connect } from 'react-redux'
+import { getAllParks, selectPark } from './actions/parks'
 import ParksList from './components/ParksList'
 import ParkForm from './components/ParkForm'
 import Park from './components/Park'
-import ParkModel from './models/Park'
 window.BASE_URL = 'http://localhost:5000/api'
 
+const mapDispatchToProps = dispatch => bindActionCreators({
+  getAllParks,
+  selectPark
+}, dispatch)
+const mapStateToProps = ({ parks }) => ({ parks })
+
 class App extends Component {
-  constructor () {
-    super()
-    this.state = {
-      parks: [],
-      selected: null
-    }
-  }
-
-  componentDidMount () {
-    this.resetParks()
-  }
-
-  handleSelectPark = async (id) => {
-    this.setState({ selected: id })
-  }
-
-  resetParks = async (id=null) => {
-    const parks = await ParkModel.all()
-    this.setState({ parks, selected: null })
-    this.handleSelectPark(id)
+  componentDidMount = async () => {
+    await this.props.getAllParks()
   }
 
   render() {
@@ -40,16 +30,15 @@ class App extends Component {
           <div className="row">
             <div className="col-3">
               <ParksList
-                parks={ this.state.parks }
-                selected={ this.state.selected }
-                selectPark={ this.handleSelectPark } />
+                parks={ this.props.parks.all }
+                selected={ this.props.parks.selected } />
             </div>
             <div className="col">
               {
-                this.state.selected &&
+                this.props.parks.selected.id &&
                 <Park
-                  key={ this.state.selected }
-                  parkId={ this.state.selected }
+                  key={ this.props.parks.selected }
+                  parkId={ this.props.parks.selected }
                   resetParks= { this.resetParks }
                   />
               }
@@ -66,4 +55,4 @@ class App extends Component {
   }
 }
 
-export default App;
+export default connect(mapStateToProps, mapDispatchToProps)(App);

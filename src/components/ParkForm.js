@@ -1,11 +1,17 @@
 import React, { Component } from 'react'
-import ParkModel from '../models/Park'
+import { bindActionCreators } from 'redux'
+import { connect } from 'react-redux'
+import { updateOrCreatePark, selectPark } from '../actions/parks'
+
+const mapStateToProps = ({ parks: { selected } }) => ({ park: selected })
+const mapDispatchToProps = dispatch => bindActionCreators({
+  updateOrCreatePark, selectPark
+}, dispatch)
 
 class ParkForm extends Component {
   constructor (props) {
     super(props)
-    const { park={} } = this.props
-    const { name='', city='', state='', id=null } = park
+    const { name='', city='', state='', id=null } = this.props.park
     this.state = {
       id,
       name,
@@ -24,17 +30,10 @@ class ParkForm extends Component {
   onSubmit = async (event) => {
     event.preventDefault()
 
-    const { name, city, state, id } = this.state
-    const park = id ?
-      await ParkModel.update(id, { name, city, state }) :
-      await ParkModel.create({ name, city, state })
+    const errors = await this.props.updateOrCreatePark(this.state)
+    if (errors) return this.setState({ errors })
 
-    if (park.errors) return this.setState({ errors: park.errors })
-
-    const newState = id ? park : { name: '', city: '', state: '' }
-    this.setState({ ...newState, errors: [] })
-
-    this.props.resetParks(park.id)
+    this.props.toggleEdit && this.props.toggleEdit()
   }
 
   render () {
@@ -71,4 +70,4 @@ class ParkForm extends Component {
   }
 }
 
-export default ParkForm
+export default connect(mapStateToProps, mapDispatchToProps)(ParkForm)

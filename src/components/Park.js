@@ -1,25 +1,25 @@
 import React from 'react'
+import { bindActionCreators } from 'redux'
+import { connect } from 'react-redux'
+import { selectPark, deletePark } from '../actions/parks'
 import ParkForm from './ParkForm'
-import ParkModel from '../models/Park'
+
+const mapStateToProps = ({ parks: { selected } }) => ({ selected })
+const mapDispatchToProps = (dispatch) => bindActionCreators({
+  selectPark, deletePark
+}, dispatch)
 
 class Park extends React.Component {
   constructor (props) {
     super(props)
     this.state = {
-      park: { rides: [] },
-      parksById: {},
       showEdit: false
     }
   }
 
-  componentDidMount = async () => {
-    const park = await ParkModel.find(this.props.parkId)
-    this.setState({ park })
-  }
-
   destroyPark = async () => {
-    await ParkModel.destroy(this.state.park.id)
-    this.props.resetParks()
+    await this.props.deletePark(this.props.selected.id)
+    await this.props.selectPark()
   }
 
   toggleEdit = () => {
@@ -27,7 +27,7 @@ class Park extends React.Component {
   }
 
   render () {
-    const { park } = this.state
+    const park = this.props.selected
     const lis = park.rides.map(ride => {
       return <li key={ ride.id }>{ ride.name } ({ ride.capacity } Capacity)</li>
     })
@@ -66,4 +66,4 @@ class Park extends React.Component {
   }
 }
 
-export default Park
+export default connect(mapStateToProps, mapDispatchToProps)(Park)
